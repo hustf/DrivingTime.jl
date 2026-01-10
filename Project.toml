@@ -1,6 +1,6 @@
 name = "DrivingTime"
 uuid = "1ecbb15d-b281-4057-aa90-5b0af5572765"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["hustf <hustf@users.noreply.github.com> and contributors"]
 
 [deps]
@@ -12,6 +12,7 @@ OrdinaryDiffEqCore = "bbf590c4-e513-4bbe-9b18-05decba2e5d8"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 RouteSlopeDistance = "07025e9e-5a27-4179-b043-88080b1ee239"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
@@ -22,3 +23,4 @@ OrdinaryDiffEq = "6.105.0"
 OrdinaryDiffEqCore = "2.3.0"
 Plots = "1.41.3"
 SciMLBase = "2.132.0"
+StaticArrays = "1.9.16"
