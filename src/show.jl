@@ -68,14 +68,3 @@ end
 
 # Specific to this module:
 @define_show_with_fieldnames(Journey)
-
-function Base.show(io::IO, ::MIME"text/plain", Γ::State{P,V,A}) where {P,V,A}
-   # The human readable version
-   print(io, "State(; ")
-   print(io, "position = ", round(P, first(Γ.x); digits = 1))
-   print(io, ", ")
-   print(io, "velocity = ",  round(V, first(Γ.x´); digits = 1))
-   print(io, ", ")
-   print(io, "acceleration = ", round(A, first(Γ.x´´); digits = 1))
-   print(io, " )")
-end

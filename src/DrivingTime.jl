@@ -6,47 +6,38 @@ using Interpolations: extrapolate, interpolate, Gridded, Linear, Throw, scale
 import RouteSlopeDistance
 using RouteSlopeDistance: route_leg_data
 import Unitful
-using Unitful: Length, Velocity, Acceleration
-import StaticArrays
-using StaticArrays: MVector
-import Base: show, ==
-export Journey, State
+using Unitful: Length, Velocity, Acceleration, Time
+using Unitful: @u_str, Quantity
+#import StaticArrays # Not needed? State dead.
+#using StaticArrays: MVector # Not needed? State dead.
+using RecursiveArrayTools
+import Base: show
+import Test
+using Test: @inferred
+import OrdinaryDiffEq
+using OrdinaryDiffEq: ODEProblem, ContinuousCallback, DiscreteCallback, CallbackSet
+using OrdinaryDiffEq: terminate!, Tsit5, solve, get_proposed_dt, init, solve!
+import OrdinaryDiffEqCore
+using OrdinaryDiffEqCore: ODEIntegrator
+import SciMLBase
+using SciMLBase: ReturnCode.Success, ReturnCode.Terminated, ReturnCode.DtLessThanMin
+using SciMLBase: successful_retcode
+using ComponentArrays
+using RecursiveArrayTools
+using Logging
+export Journey, solve_journey
 
 const g = 9.81u"m/s^2"
 
-pack(x::T) where T = MVector{1,T}([x])
-# Type for the local tuple, Γ 
-struct State{P,V,A}
-   x::MVector{1,P}
-   x´::MVector{1,V}
-   x´´::MVector{1,A}
-   function State(
-        x  :: MVector{1,P},
-        x´  :: MVector{1,V},
-        x´´ :: MVector{1,A}
-    ) where {
-        P <: Length,
-        V <: Velocity,
-        A <: Acceleration
-    }
-        new{P,V,A}(x, x´, x´´)
-    end
-end
-# Convenience constructors
-function State(x::P, x´::V, x´´::A) where{P<:Quantity, V<:Quantity, A<:Quantity}
-   State(pack(x), pack(x´), pack(x´´))
-end
-State(; position = 0.0u"m", velocity = 0.0u"km/hr", acceleration = 0.0u"m/s^2") = State(position, velocity, acceleration)
-function ==(Γ1::T1, Γ2::T2) where {T1 <:State, T2 <: State}
-   Γ1.x == Γ2.x && Γ1.x´ == Γ2.x´ && Γ1.x´´ == Γ2.x´´
-end
+pack(x::T) where {T <: Quantity } = MVector{1,T}([x])
 
-struct Journey{S}
+
+struct Journey{S<:Extrapolation}
    fslope::S
 end
 
 include("show.jl")
-include("define_rhs.jl")
+include("define_journey.jl")
 include("diffeq.jl")
 
 end

@@ -1,26 +1,30 @@
 name = "DrivingTime"
 uuid = "1ecbb15d-b281-4057-aa90-5b0af5572765"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["hustf <hustf@users.noreply.github.com> and contributors"]
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 IniFile = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 OrdinaryDiffEqCore = "bbf590c4-e513-4bbe-9b18-05decba2e5d8"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 RouteSlopeDistance = "07025e9e-5a27-4179-b043-88080b1ee239"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 Dates = "1.11.0"
 IniFile = "0.5.1"
 Interpolations = "0.16.2"
+Logging = "1.11.0"
 OrdinaryDiffEq = "6.105.0"
 OrdinaryDiffEqCore = "2.3.0"
 Plots = "1.41.3"
+RecursiveArrayTools = "3.43.0"
 SciMLBase = "2.132.0"
-StaticArrays = "1.9.16"
+Test = "1.11.0"
