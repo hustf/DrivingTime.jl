@@ -30,6 +30,12 @@ function solve_guarded(rhs, Γᵢₙ, 𝐣::Journey, tspan, cbs; debug=false, od
     sol
 end
 
+"""
+    solve_journey(rhs, Γᵢₙ, 𝐣::Journey; odekws...)
+    solve_journey(Γᵢₙ::ArrayPartition, 𝐣::Journey;odekws...)
+    solve_journey(𝐣::Journey;odekws...)
+    ---> SciMLBase.ODESolution
+"""
 function solve_journey(rhs, Γᵢₙ, 𝐣::Journey; odekws...)
     tspan = make_tspan()
     cbs = callbacks_journey(𝐣; odekws...)
@@ -43,8 +49,9 @@ function solve_journey(rhs, Γᵢₙ, 𝐣::Journey; odekws...)
     end
     solve_guarded(rhs, Γᵢₙ, 𝐣, tspan, cbs; remaining_kws...)
 end
+solve_journey(Γᵢₙ::ArrayPartition, 𝐣::Journey;odekws...) = solve_journey(rhs!, Γᵢₙ, 𝐣; odekws...)
+solve_journey(𝐣::Journey;odekws...) = solve_journey(ArrayPartition([0.0u"m"], [0.0u"m/s"]), 𝐣; odekws...)
 
-solve_journey(Γᵢₙ, 𝐣::Journey;odekws...) = solve_journey(rhs!, Γᵢₙ, 𝐣; odekws...)
 
 """
     make_tspan(; odekws...)

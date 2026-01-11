@@ -7,9 +7,7 @@ import RouteSlopeDistance
 using RouteSlopeDistance: route_leg_data
 import Unitful
 using Unitful: Length, Velocity, Acceleration, Time
-using Unitful: @u_str, Quantity
-#import StaticArrays # Not needed? State dead.
-#using StaticArrays: MVector # Not needed? State dead.
+using Unitful: @u_str, Quantity, NoUnits
 using RecursiveArrayTools
 import Base: show
 import Test
@@ -22,10 +20,11 @@ using OrdinaryDiffEqCore: ODEIntegrator
 import SciMLBase
 using SciMLBase: ReturnCode.Success, ReturnCode.Terminated, ReturnCode.DtLessThanMin
 using SciMLBase: successful_retcode
-using ComponentArrays
 using RecursiveArrayTools
 using Logging
-export Journey, solve_journey
+using Plots
+
+export Journey, solve_journey, plot_journey, slope, @u_str
 
 const g = 9.81u"m/s^2"
 
@@ -39,5 +38,6 @@ end
 include("show.jl")
 include("define_journey.jl")
 include("diffeq.jl")
+include("plot_journey.jl")
 
 end

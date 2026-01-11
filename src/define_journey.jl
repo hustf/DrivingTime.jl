@@ -28,3 +28,15 @@ function Journey(ea1, no1, ea2, no2; default_fartsgrense = 50)
     Journey(itp_s)
 end
 
+# Utility
+"""
+    slope_angle(𝐣::Journey, p::T) where T<:Length
+    --> Quantity{°}
+
+We leave in this "unit" because the plotting recipe for quantities would be confused by
+a plain Float64.
+""" 
+function slope_angle(𝐣::Journey, p::T) where T<:Length
+    p_m = NoUnits(p / Unitful.m)
+    Unitful.°(atan(𝐣.fslope(p_m)))
+end
