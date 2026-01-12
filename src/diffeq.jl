@@ -17,19 +17,22 @@ function solve_guarded(rhs, Γᵢₙ, 𝐣::Journey, tspan, cbs; debug=false, od
         end
     end
     @inferred packin!(Γ´, 1.0u"m/s", 2.0u"m/s^2")
-    # TODO: Fix
-#    @inferred 𝐣.fslopeacc(p)
-   #  @inferred 𝐣.fairacc(p´)
-   # @inferred 𝐣.fmotoracclim(p´)
+    @inferred 𝐣.fslopeacc(p)
+    @inferred 𝐣.fairacc(p´)
+    @inferred 𝐣.fmotoracclim(p´)
     @inferred rhs(Γ´, Γᵢₙ, 𝐣, nothing)
-    # Define and solve
+    # Define 
     prob = ODEProblem(rhs, Γᵢₙ, tspan, 𝐣, callback = cbs)
+    integrator = init(prob, Tsit5(); odekws...)
+    # More inferrence checking
+    @inferred condition_toofast(Γᵢₙ, 1.0u"s", integrator)
+    @inferred condition_reversing(Γᵢₙ, 1.0u"s", integrator)
     sol = if debug
         with_logger(Logging.ConsoleLogger(stderr, Logging.Debug)) do
-            solve(prob, Tsit5(); odekws...)
+            solve!(integrator)
         end
     else
-        solve(prob, Tsit5(), odekws...)
+        solve!(integrator)
     end
     sol
 end
@@ -96,6 +99,9 @@ function callbacks_journey(𝐣::Journey; odekws...)
     end
     # Stopped vehicle, we're not interested in reversing
     push!(vdcb, DiscreteCallback(condition_reversing, affect_reversing!, save_positions=(true,true)))
+    # Too fast vehicle, we're not interested in results for a bad model
+    push!(vdcb, DiscreteCallback(condition_toofast, affect_toofast!, save_positions=(true,true)))
+
     CallbackSet(vccb..., vdcb...)
 end
 
@@ -127,6 +133,7 @@ end
 
 # Our own function for potential debugging termination causes.
 function affect!(integrator)
+    @debug "Terminate"
     terminate!(integrator)
 end
 
@@ -142,3 +149,13 @@ function affect_reversing!(integrator)
     terminate!(integrator)
 end
 
+function condition_toofast(u, t, integrator::ODEIntegrator)
+    p, p´ = packout(u)
+    p´ > 150.0u"km/hr"
+end
+
+function affect_toofast!(integrator)
+    # For debugging
+    @debug "Terminate due to driving too fast"
+    terminate!(integrator)
+end
