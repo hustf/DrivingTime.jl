@@ -9,7 +9,7 @@ no2 = 6928773
 ea2 = 33196
 tit = na1 * " -> " * na2
 𝐣 = Journey(ea1, no1, ea2, no2);
-@test sizeof(𝐣) == 128
+@test sizeof(𝐣) == 144
 
 #  13.943960 seconds (70.56 M allocations: 3.432 GiB, 5.13% gc time, 188.06% compilation time: <1% of which was recompilation)
 # 0.000584 seconds (1.23 k allocations: 50.570 KiB, 0.21% compilation time: 100% of which was recompilation)
@@ -21,9 +21,11 @@ tit = na1 * " -> " * na2
 # 0.001245 seconds (1.79 k allocations: 76.148 KiB, 0.13% compilation time: 100% of which was recompilation)
 # 0.000722 seconds (1.85 k allocations: 80.523 KiB, 0.22% compilation time: 100% of which was recompilation)
 # 0.000638 seconds (4.51 k allocations: 207.805 KiB, 3472.15% compilation time: <1% of which was recompilation)
+# 0.000797 seconds (1.98 k allocations: 89.211 KiB, 0.21% compilation time: 100% of which was recompilation)
+# 0.001096 seconds (4.92 k allocations: 185.852 KiB, 0.23% compilation time: 100% of which was recompilation)
 # @time solve_journey(𝐣);
 sol = solve_journey(𝐣);
-sol.t[end]
+sol.t[end] # 320 26.6
 plot_journey(sol; tit)
 
 DrivingTime.slope_angle(𝐣, 0.0u"km")

@@ -35,7 +35,8 @@ this ordinary differential equation.
 function Journey(ea1, no1, ea2, no2; 
     default_fartsgrense = 50, 
     f_air_acc = AirAcceleration(),
-    f_motor_acclim = MotorlimAcceleration())
+    f_motor_acclim = MotorlimAcceleration(),
+    f_roll_acc = RollAcceleration())
     #
     # Slope and progression (and fartsgrense)
     d = route_leg_data(ea1, no1, ea2, no2; default_fartsgrense)
@@ -45,8 +46,10 @@ function Journey(ea1, no1, ea2, no2;
     p = d[:progression] * u"m"
     # Interpolator progression -> slope
     itp_s = locally_smooth_interpolation(p, s)
+    # End of journey
+    pstop = Unitful.km(p[end])
     # Construct
-    Journey(itp_s, f_air_acc, f_motor_acclim)
+    Journey(pstop, itp_s, f_air_acc, f_motor_acclim, f_roll_acc)
 end
 
 # Utility

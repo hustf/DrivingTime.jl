@@ -31,7 +31,8 @@ const VEHICLE_DEFAULTS = (;mass = 15300.0u"kg",  # "Egenvekt med fører"
                            power = 350.0u"kW",   # (merk: "280 kW per 30 min")
                            motorlim = 22.5u"kN", # This is unknown, but we can't have wheels spinning at low speed.
                            frontarea = 2.55u"m" * 3.5u"m",
-                           shapecoeff = 1.1
+                           shapecoeff = 1.1,
+                           rollcoeff = 0.09      # lump losses proportional to mass. Winter tires.
                            )
 const ENVIRONMENT_DEFAULTS = ( 
                               T = 278.15u"K", # 5°C
@@ -40,6 +41,7 @@ const ENVIRONMENT_DEFAULTS = (
                               Rᵥ   = 461.495u"J * kg^-1 * K^-1", # Specific gas constant for water vapor
                               pₐₜₘ = 101.325u"kPa" # Sea level standard pressure
                            )
+const Tprog = typeof(1.0u"km")
 const Tmass = typeof(VEHICLE_DEFAULTS.mass)
 const Tpower = typeof(VEHICLE_DEFAULTS.power)
 const Tarea = typeof(VEHICLE_DEFAULTS.frontarea)
@@ -50,9 +52,11 @@ include("acceleration_components.jl")
 
 
 struct Journey{S <:Extrapolation}
+   pstop::Tprog                       # End progression of the journey
    fslopeacc::S                       # Interpolation(progression)
    fairacc::AirAcceleration           # Callable with velocity
    fmotoracclim::MotorlimAcceleration # Callable with velocity
+   frollacc::RollAcceleration         # Callable with no argument
 end
 
 include("show.jl")

@@ -21,7 +21,6 @@ function journey_plots(ts, ps, vs, acs, ss;
     tlims = (minimum(ts), maximum(ts)),
     alims = (min(zero(acs[1]), minimum(acs)), max(zero(acs[1]), maximum(acs))),
     slims = (min(zero(ss[1]), minimum(ss)), max(zero(ss[1]), maximum(ss))),
-    length = 300, 
     p_vp = plot(),
     p_ap = plot(),
     p_sp = plot(),

@@ -20,6 +20,7 @@ function solve_guarded(rhs, Γᵢₙ, 𝐣::Journey, tspan, cbs; debug=false, od
     @inferred 𝐣.fslopeacc(p)
     @inferred 𝐣.fairacc(p´)
     @inferred 𝐣.fmotoracclim(p´)
+    @inferred 𝐣.frollacc()
     @inferred rhs(Γ´, Γᵢₙ, 𝐣, nothing)
     # Define 
     prob = ODEProblem(rhs, Γᵢₙ, tspan, 𝐣, callback = cbs)
@@ -86,7 +87,6 @@ function make_tspan(; odekws...)
 end
 
 function callbacks_journey(𝐣::Journey; odekws...)
-    # Early end conditions
     vccb = ContinuousCallback[]
     vdcb = DiscreteCallback[]
     #
@@ -101,7 +101,14 @@ function callbacks_journey(𝐣::Journey; odekws...)
     push!(vdcb, DiscreteCallback(condition_reversing, affect_reversing!, save_positions=(true,true)))
     # Too fast vehicle, we're not interested in results for a bad model
     push!(vdcb, DiscreteCallback(condition_toofast, affect_toofast!, save_positions=(true,true)))
-
+    # End of the journey geometry reached. Extrapolated ends makes 
+    # overshooting the geometry not problematic. Capture pstop:
+    pstop = 𝐣.pstop
+    function condition_endprogress(u, t, integrator::ODEIntegrator)
+        p, p´ = packout(u)
+        p >= pstop
+    end
+    push!(vdcb, DiscreteCallback(condition_endprogress, affect_endprogress!, save_positions=(true,true)))
     CallbackSet(vccb..., vdcb...)
 end
 
@@ -124,8 +131,13 @@ function rhs!(du, u, 𝐣::Journey, t)
     p´´1 = 𝐣.fslopeacc(p)
     p´´2 = 𝐣.fairacc(p´)
     p´´3 = 𝐣.fmotoracclim(p´)
-    @debug "p´´"  p´´1   p´´2   p´´3   maxlog = 2
-    p´´ = p´´1  +  p´´3  + p´´3
+    p´´4 = 𝐣.frollacc()
+    @debug "p´´"  p´´1   p´´2   p´´3  p´´4 maxlog = 2
+    if p´ < 20u"km/hr"
+        p´´ = p´´1  + p´´2 + p´´3  + p´´4
+    else
+        p´´ = p´´1  + p´´2 + p´´4
+    end
     @debug "du "    p´´     maxlog = 2
     packin!(du, p´, p´´)
     du
@@ -151,11 +163,17 @@ end
 
 function condition_toofast(u, t, integrator::ODEIntegrator)
     p, p´ = packout(u)
-    p´ > 150.0u"km/hr"
+    p´ > 350.0u"km/hr"
 end
 
 function affect_toofast!(integrator)
     # For debugging
     @debug "Terminate due to driving too fast"
+    terminate!(integrator)
+end
+
+function affect_endprogress!(integrator)
+    # For debugging
+    @debug "Terminate due to reaching end of journey"
     terminate!(integrator)
 end
