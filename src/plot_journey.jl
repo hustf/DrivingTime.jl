@@ -36,12 +36,16 @@ function journey_plots(ts, ps, vs, acs, ss;
     #
     p_vp, p_ap, p_sp, p_tp
 end
-function plot_journey(sol::SciMLBase.ODESolution; length = 300, kws...)
+function plot_journey(sol::SciMLBase.ODESolution; length = 300, tit = "", kws...)
     #
     ts, ps, vs, acs, ss = extract_from_solution(sol; length)
     t = Unitful.minute.(ts)
     p = Unitful.km.(ps)
     v = u"km/hr".(vs)
     p_vp, p_ap, p_sp, p_tp = journey_plots(t, p, v, acs, ss; kws...)
-    plot(layout = (4, 1), p_vp, p_ap, p_sp, p_tp, legend=false)
+    pl = plot(layout = (4, 1), p_vp, p_ap, p_sp, p_tp)
+    if tit !==""
+        title!(pl[1], tit)
+    end
+    pl
 end

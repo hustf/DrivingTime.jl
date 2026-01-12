@@ -27,12 +27,28 @@ using Plots
 export Journey, solve_journey, plot_journey, slope, @u_str
 
 const g = 9.81u"m/s^2"
+const VEHICLE_DEFAULTS = (;mass = 15300.0u"kg", # Egenvekt med fører 
+                           power = 350.0u"kW",  # (merk: "280 kW per 30 min")
+                           motorlim = 21.25u"kN", # This is unknown, but we can't have wheels spinning at low speed.
+                           frontarea = 2.55u"m" * 3.5u"m",
+                           shapecoeff = 1.1
+                           )
+const ENVIRONMENT_DEFAULTS = ( 
+                              T = 278.15u"K", # 5°C
+                              p    = 101.325u"kPa", # Sea level
+                              Rₐᵢᵣ =  287.058u"J * kg^-1 * K^-1", # Specific gas constant, dry air 
+                              Rᵥ   = 461.495u"J * kg^-1 * K^-1", # Specific gas constant for water vapor
+                              pₐₜₘ = 101.325u"kPa" # Sea level standard pressure
+                           )
+include("thermodynamics.jl")
+include("acceleration_components.jl")
 
-pack(x::T) where {T <: Quantity } = MVector{1,T}([x])
 
-
-struct Journey{S<:Extrapolation}
+struct Journey{S <:Extrapolation, F1, F2, F3}
    fslope::S
+   fslopeacc::F1
+   fairacc::F2
+   fmotoracclim::F3
 end
 
 include("show.jl")

@@ -1,6 +1,6 @@
 name = "DrivingTime"
 uuid = "1ecbb15d-b281-4057-aa90-5b0af5572765"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["hustf <hustf@users.noreply.github.com> and contributors"]
 
 [deps]
