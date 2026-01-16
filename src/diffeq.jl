@@ -133,7 +133,7 @@ function rhs!(du, u, 𝐣::Journey, t)
     p´´3 = 𝐣.fmotoracclim(p´)
     p´´4 = 𝐣.frollacc()
     @debug "p´´"  p´´1   p´´2   p´´3  p´´4 maxlog = 2
-    if p´ < 20u"km/hr"
+    if p´ < 80u"km/hr" # Temp of course
         p´´ = p´´1  + p´´2 + p´´3  + p´´4
     else
         p´´ = p´´1  + p´´2 + p´´4

@@ -22,10 +22,45 @@ function locally_smooth_interpolation(p::Vector{T}, s) where T
 end
 
 """
-    Journey(ea1, no1, ea2, no2; ; default_fartsgrense = 50)
+    max_speed_adjusted_for_curvature(v, r)
+    ---> Vector{Quantity{<:Velocity}}
 
-An external constructor for the right-hand side functor for 
-this ordinary differential equation.
+Measurements from EcoSafe analyzed in `dev_acceptable_lateral_acceleration`. 
+The maximum lateral acceleration should be 
+
+    2.2 m/s² = a = v² / abs(r)
+ => 
+    v <= √(abs(r) * 2.2 m/s^2) 
+
+where `r` is signed road radius of curvature, `a` is centripetal acceleration and 
+`v` is the maxium speed for comfortable passenger transport.
+
+This one is hard coded since it's well founded.
+"""
+function max_speed_adjusted_for_curvature(v, r)
+    replace!(r, NaN * u"m"  => 0.0u"m")
+    @assert length(v) == length(r)
+    # Wanted velocity
+    w = copy(v)
+    for i in eachindex(v)
+        if r[i] !== 0.0u"m"
+            w =  √(abs(r[i]) * 2.2u"m/s^2")
+            if v[i] > w
+                v[i] = w
+            end
+        end
+    end
+    v
+end
+
+"""
+    Journey((ea1, no1, ea2, no2; 
+    default_fartsgrense = 50, 
+    f_air_acc = AirAcceleration(),
+    f_motor_acclim = MotorlimAcceleration(),
+    f_roll_acc = RollRAcceleration()
+
+An external constructor for the ODE right-hand side parameters.
 
 # Arguments
 
@@ -36,7 +71,7 @@ function Journey(ea1, no1, ea2, no2;
     default_fartsgrense = 50, 
     f_air_acc = AirAcceleration(),
     f_motor_acclim = MotorlimAcceleration(),
-    f_roll_acc = RollAcceleration())
+    f_roll_acc = RollRAcceleration())
     #
     # Slope and progression (and fartsgrense)
     d = route_leg_data(ea1, no1, ea2, no2; default_fartsgrense)
@@ -48,8 +83,15 @@ function Journey(ea1, no1, ea2, no2;
     itp_s = locally_smooth_interpolation(p, s)
     # End of journey
     pstop = Unitful.km(p[end])
+    # Wanted speed
+    v = max_speed_adjusted_for_curvature(d[:speed_limitation] * u"km/hr", d[:radius_of_curvature] * u"m")
+    # v may have abrupt changes, but our simple control function doesn't look ahead.
+    # Instead, we reduce the velocity gradient ahead of step changes downward.
+    # TODO
+    # Interpolator progression -> wanted speed
+    itp_v = locally_smooth_interpolation(p, v)
     # Construct
-    Journey(pstop, itp_s, f_air_acc, f_motor_acclim, f_roll_acc)
+    Journey(pstop, itp_s, f_air_acc, f_motor_acclim, f_roll_acc, itp_v)
 end
 
 # Utility
