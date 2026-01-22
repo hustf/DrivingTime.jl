@@ -8,6 +8,7 @@ using RouteSlopeDistance: route_leg_data
 import Unitful
 using Unitful: Length, Velocity, Acceleration, Time
 using Unitful: @u_str, Quantity, NoUnits, dimension
+using Unitful: uconvert
 using RecursiveArrayTools
 import Base: show
 import Test
@@ -23,8 +24,9 @@ using SciMLBase: successful_retcode
 using RecursiveArrayTools
 using Logging
 using Plots
-
-export Journey, solve_journey, plot_journey, slope, @u_str
+import Dates
+using Dates: Minute
+export drivetime
 
 const g = 9.81u"m/s^2"
 
@@ -100,5 +102,7 @@ include("show.jl")
 include("define_journey.jl")
 include("diffeq.jl")
 include("plot_journey.jl")
+include("exported.jl")
+
 
 end

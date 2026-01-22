@@ -7,22 +7,22 @@ gravity_comp_along_surface(slope::Float64) = -g * sin(atan(slope))
 
 
 """
-    @kwdef struct AirAcceleration
+    @kwdef struct AirAcceleration{F}
         m::Tmass = VEHICLE_DEFAULTS.mass
         ρ::typeof(1.0u"kg/m^3") = ρ_humid(ENVIRONMENT_DEFAULTS.T)
         Cs::Float64 = VEHICLE_DEFAULTS.shapecoeff
         A::Tarea = VEHICLE_DEFAULTS.frontarea
-        f::typeof(wind_force) = wind_force
+        f::F = wind_force
     end
 
 Refer to `wind_force`.
 """
-@kwdef struct AirAcceleration
+@kwdef struct AirAcceleration{F}
     m::Tmass = VEHICLE_DEFAULTS.mass
     ρ::typeof(1.0u"kg/m^3") = ρ_humid(ENVIRONMENT_DEFAULTS.T)
     Cs::Float64 = VEHICLE_DEFAULTS.shapecoeff
     A::Tarea = VEHICLE_DEFAULTS.frontarea
-    f::typeof(wind_force) = wind_force
+    f::F = wind_force
 end
 # Callable with velocity
 (a::AirAcceleration)(v) = -a.f(a.Cs, a.A, a.ρ, v) / a.m
@@ -57,25 +57,25 @@ end
 
 
 """
-    @kwdef struct MotorlimAcceleration
+    @kwdef struct MotorlimAcceleration{F}
         m::Tmass = VEHICLE_DEFAULTS.mass
         mr::Tmass = VEHICLE_DEFAULTS.massrot
         P::Tpower = VEHICLE_DEFAULTS.power
         F::Tforce = VEHICLE_DEFAULTS.motorlim
         rmp::Tvel = VEHICLE_DEFAULTS.rampvel
-        f::typeof(motor_acceleration_limit) = motor_acceleration_limit
+        f::F = motor_acceleration_limit
     end
 
 Refer to `motor_acceleration_limit`.
 """
-@kwdef struct MotorlimAcceleration
+@kwdef struct MotorlimAcceleration{F}
     m::Tmass = VEHICLE_DEFAULTS.mass
     mr::Tmass = VEHICLE_DEFAULTS.massrot
     P::Tpower = VEHICLE_DEFAULTS.power
     η::Float64 = VEHICLE_DEFAULTS.η
     F::Tforce = VEHICLE_DEFAULTS.motorlim
     rmp::Tvel = VEHICLE_DEFAULTS.rampvel
-    f::typeof(motor_acceleration_limit) = motor_acceleration_limit
+    f::F = motor_acceleration_limit
 end
 # Callable with velocity
 (a::MotorlimAcceleration)(v) = a.f(a.m + a.mr, a.P * a.η, a.F, a.rmp, v)
@@ -113,16 +113,16 @@ end
 # but we try to make a consistent and easily extendable
 # model.
 """
-    @kwdef struct RollRAcceleration
+    @kwdef struct RollRAcceleration{F}
         Cr::Float64 = VEHICLE_DEFAULTS.rollcoeff
-        f::typeof(roll_acceleration) = roll_acceleration
+        f::F = roll_acceleration
     end
 
 Refer to `roll_acceleration`.
 """
-@kwdef struct RollRAcceleration
+@kwdef struct RollRAcceleration{F}
     Cr::Float64 = VEHICLE_DEFAULTS.rollcoeff
-    f::typeof(roll_acceleration) = roll_acceleration
+    f::F = roll_acceleration
 end
 # Callable, no argument
 (a::RollRAcceleration)() =  -roll_acceleration(a.Cr)

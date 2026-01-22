@@ -120,6 +120,37 @@ function plot_acceleration_components!(p_ap, vxax, motoracc, slopeacc, airacc, r
                   )
 end
 
+function extract_velocity_set_point_and_deviation(𝐣::Journey, p, p´)
+    @assert length(p) == length(p´)
+    vsetpoint = map(𝐣.itp_v, p)
+    vdeviation = vsetpoint .- p´
+    vsetpoint, vdeviation  
+end
+
+
+function plot_velocity_set_point_and_deviation!(p_vp, vxax, vsetpoint, vdeviation, p´)
+    c1 = :red
+    c2 = :green
+    plot!(p_vp, vxax, vsetpoint, label = false, color = c1)
+    areaplot!(p_vp, vxax, vdeviation, label = false, color = c2, fillalpha = 0.3)
+    xmi = vxax[1] + 0.25 * (vxax[end] - vxax[1])
+    xma = vxax[end] * 0.75
+    xra = range(xmi, xma, length = 2)
+    i1 = searchsortedfirst(vxax, xra[1])
+    i2 = searchsortedfirst(vxax, xra[2])
+    y1 = vsetpoint[i1]
+    y2 = vdeviation[i2]
+    t1 = text("Setpoint", 14, :hcenter, :vcenter, c1, rotation = 30)
+    t2 = text("Deviation", 14, :hcenter, :vcenter, c2, rotation = 30)
+    miy = Tvel(minimum(vdeviation)) / 1u"km/hr"
+    may = Tvel(max(maximum(p´), maximum(vsetpoint))) / 1u"km/hr"
+    @show miy may
+    ylims!(p_vp, (miy, may))
+    annotate!(p_vp, [(xra[1],  y1, t1),
+                  (xra[2],  y2, t2)])
+end
+
+
 
 
 """
@@ -129,7 +160,7 @@ end
 """
 function plot_journey(sol::SciMLBase.ODESolution; xtime::Bool = false, 
     length = 300, tit = "", progress_max = nothing, kws...)
-
+    #
     if xtime
         # Time range distributed evenly along time
         @assert isnothing(progress_max) "progress_max can't be set when xtime is true"
@@ -158,6 +189,11 @@ function plot_journey(sol::SciMLBase.ODESolution; xtime::Bool = false,
     # Also plot contributions to acceleration.
     motoracc, slopeacc, airacc, rollacc = extract_acceleration_contributions(sol.prob.p, ps, vs)
     plot_acceleration_components!(p_ap, vxaxis, motoracc, slopeacc, airacc, rollacc )
+    # Also plot velocity limit with reductions, and deviation
+    vsetpoint, vdeviation = extract_velocity_set_point_and_deviation(sol.prob.p, ps, vs)
+    plot_velocity_set_point_and_deviation!(p_vp, vxaxis, vsetpoint, vdeviation, vs)
+    #
+    # Assemble plots
     pl = plot(layout = (4, 1), p_vp, p_ap, p_sp, p_tp)
     if tit !==""
         title!(pl[1], tit)

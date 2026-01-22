@@ -23,6 +23,8 @@ tit = na1 * " -> " * na2
 𝐣 = Journey(ea1, no1, ea2, no2);
 @test sizeof(𝐣) == 240
 
+
+
 #  13.943960 seconds (70.56 M allocations: 3.432 GiB, 5.13% gc time, 188.06% compilation time: <1% of which was recompilation)
 # 0.000584 seconds (1.23 k allocations: 50.570 KiB, 0.21% compilation time: 100% of which was recompilation)
 # 0.009327 seconds (123.87 k allocations: 4.592 MiB, 238.85% compilation time: <1% of which was recompilation)
@@ -85,9 +87,6 @@ ea2 = 36004
 no2 = 6947678
 tit = na1 * " -> " * na2
 
-
-
-
 vrng =  0.0u"km/hr": 0.1u"km/hr":120.0u"km/hr"
 f_motor_acclim = MotorlimAcceleration(;rmp = 0.5u"km/hr", η = 0.9)
 pl = plot(vrng, f_motor_acclim.(vrng), ylims = (0, 1.65), xlims=(0, 82))
@@ -102,3 +101,47 @@ pl = plot_journey(sol; tit, xtime = false)
 pl = plot_journey(sol; tit, xtime = true)
 pl = plot_journey(sol; tit, xtime = true, xlim = (0, 0.17))
 
+# Multiple velocity limit changes
+using DrivingTime
+using DrivingTime: route_leg_data, max_speed_adjusted_for_curvature, reduce_speed_looking_ahead!
+using Plots
+na1 = "Møre skule"
+ea1 = 24062
+no1 = 6939037
+na2 = "Ringstaddalen"
+ea2 = 28592
+no2 = 6939504
+tit = na1 * " -> " * na2
+d = route_leg_data(ea1, no1, ea2, no2; default_fartsgrense = 50.0u"km")
+p = d[:progression] * u"m"
+v = max_speed_adjusted_for_curvature(d[:speed_limitation] * u"km/hr", d[:radius_of_curvature] * u"m")
+vold = copy(v)
+plot(p, [vold v])
+plot(p[100:200], [vold[100:200] v[100:200]])
+plot(100:125, [vold[100:125] v[100:125]])
+plot(p[100:125], [vold[100:125] v[100:125]])
+
+
+reduce_speed_looking_ahead!(v, p)
+plot(p, [vold v])
+plot(1:length(v), [vold v])
+
+# Following 
+plot(1:length(v), [vold v], xlims = (462, 470), ticks = 10)
+reduce_speed_looking_ahead!(v, p, 467);
+reduce_speed_looking_ahead!(v, p, 466);
+reduce_speed_looking_ahead!(v, p);
+
+
+@code_warntype reduce_speed_looking_ahead!(v, p)
+# 0.003687 seconds (117.36 k allocations: 2.518 MiB)
+@time reduce_speed_looking_ahead!(v, p)
+
+
+
+𝐣 = Journey(ea1, no1, ea2, no2);
+sol = solve_journey(𝐣);
+
+pl = plot_journey(sol; tit, xtime = false)
+pl = plot_journey(sol; tit, xtime = true)
+plot(pl[1], size = (800, 600))
