@@ -26,7 +26,8 @@ using Logging
 using Plots
 import Dates
 using Dates: Minute
-export drivetime
+using PrecompileTools
+export drivetime, plot_journey, Journey, solve_journey, @u_str
 
 const g = 9.81u"m/s^2"
 
@@ -104,5 +105,30 @@ include("diffeq.jl")
 include("plot_journey.jl")
 include("exported.jl")
 
+
+# PrecompileTools
+@setup_workload begin
+    # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    # (too much work for me)
+    @compile_workload begin
+        # all calls in this block will be precompiled, regardless of whether
+        # they belong to your package or not (on Julia 1.8 and higher)
+        #
+        na1 = "Møre skule"
+        ea1 = 24062
+        no1 = 6939037
+        na2 = "Ringstaddalen"
+        ea2 = 28592
+        no2 = 6939504
+        tit = na1 * " -> " * na2
+        drivetime(ea1, no1, ea2, no2)
+        # A closer look
+        sol = solve_journey(Journey(ea1, no1, ea2, no2));
+        pl = plot_journey(sol; tit)
+        plot(pl[1], xlim =(5.5u"km", 6u"km"))
+        nothing
+    end
+end
 
 end

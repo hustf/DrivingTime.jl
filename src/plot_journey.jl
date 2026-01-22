@@ -1,3 +1,5 @@
+# Also see `exported.jl`. These are callees.
+
 function extract_from_solution(sol, ts)
     ps = map(t->sol(t).x[1][1], ts)
     vs = map(t->sol(t).x[2][1], ts)
@@ -144,7 +146,6 @@ function plot_velocity_set_point_and_deviation!(p_vp, vxax, vsetpoint, vdeviatio
     t2 = text("Deviation", 14, :hcenter, :vcenter, c2, rotation = 30)
     miy = Tvel(minimum(vdeviation)) / 1u"km/hr"
     may = Tvel(max(maximum(p´), maximum(vsetpoint))) / 1u"km/hr"
-    @show miy may
     ylims!(p_vp, (miy, may))
     annotate!(p_vp, [(xra[1],  y1, t1),
                   (xra[2],  y2, t2)])
@@ -153,50 +154,3 @@ end
 
 
 
-"""
-    plot_journey(sol::SciMLBase.ODESolution; length = 300, tit = "", kws...)
-    ---> plot
-
-"""
-function plot_journey(sol::SciMLBase.ODESolution; xtime::Bool = false, 
-    length = 300, tit = "", progress_max = nothing, kws...)
-    #
-    if xtime
-        # Time range distributed evenly along time
-        @assert isnothing(progress_max) "progress_max can't be set when xtime is true"
-        ts = range(sol.t[1], sol.t[end]; length)
-    else
-        # Time range distibuted evenly along progress
-        if !isnothing(progress_max)
-            @assert dimension(progress_max) == dimension(sol.u[1][1])
-        else
-            progress_max = sol.u[end][1]
-        end
-        progress_min = sol.u[1][1]
-        ts = time_range_distributed_evenly_along_progression(sol, progress_min, progress_max, length)
-    end
-    # Time, progress, velocity, acceleration, slope angle
-    ts, ps, vs, acs, ss = extract_from_solution(sol, ts)
-    t = Unitful.minute.(ts)
-    p = Unitful.km.(ps)
-    v = u"km/hr".(vs)
-    if xtime
-        vxaxis = t
-    else
-        vxaxis = p
-    end
-    p_vp, p_ap, p_sp, p_tp = journey_plots(t, vxaxis, v, acs, ss; kws...)
-    # Also plot contributions to acceleration.
-    motoracc, slopeacc, airacc, rollacc = extract_acceleration_contributions(sol.prob.p, ps, vs)
-    plot_acceleration_components!(p_ap, vxaxis, motoracc, slopeacc, airacc, rollacc )
-    # Also plot velocity limit with reductions, and deviation
-    vsetpoint, vdeviation = extract_velocity_set_point_and_deviation(sol.prob.p, ps, vs)
-    plot_velocity_set_point_and_deviation!(p_vp, vxaxis, vsetpoint, vdeviation, vs)
-    #
-    # Assemble plots
-    pl = plot(layout = (4, 1), p_vp, p_ap, p_sp, p_tp)
-    if tit !==""
-        title!(pl[1], tit)
-    end
-    pl
-end

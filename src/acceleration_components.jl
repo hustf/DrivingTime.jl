@@ -68,14 +68,14 @@ end
 
 Refer to `motor_acceleration_limit`.
 """
-@kwdef struct MotorlimAcceleration{F}
+@kwdef struct MotorlimAcceleration{T}
     m::Tmass = VEHICLE_DEFAULTS.mass
     mr::Tmass = VEHICLE_DEFAULTS.massrot
     P::Tpower = VEHICLE_DEFAULTS.power
     η::Float64 = VEHICLE_DEFAULTS.η
     F::Tforce = VEHICLE_DEFAULTS.motorlim
     rmp::Tvel = VEHICLE_DEFAULTS.rampvel
-    f::F = motor_acceleration_limit
+    f::T = motor_acceleration_limit
 end
 # Callable with velocity
 (a::MotorlimAcceleration)(v) = a.f(a.m + a.mr, a.P * a.η, a.F, a.rmp, v)
