@@ -69,8 +69,9 @@ const VEHICLE_DEFAULTS = (;mass = 15300.0u"kg",    # "Egenvekt med fører"
                            rampvel = 0.5u"km/hr",  # Motor limited to 50% at 0, 100% at ramp velocity
                            frontarea = 2.55u"m" * 3.5u"m",
                            shapecoeff = 1.1,
-                           rollcoeff = 0.009,    # Lump losses proportional to mass. Winter tires.
-                           massrot = 337.6u"kg"  # Four wheels translatory mass equivalent.
+                           rollcoeff = 0.009,      # Lump losses proportional to mass. Winter tires.
+                           massrot = 337.6u"kg",    # Four wheels translatory mass equivalent.
+                           Δv₁ = 3.0u"km/hr"        # Full motor gain amplitude (velocity deviation = Δv => gain = 1)
                            )
 const ENVIRONMENT_DEFAULTS = ( 
                               T = 278.15u"K", # 5°C
@@ -95,7 +96,8 @@ struct Journey{S <: Extrapolation, T<: Extrapolation}
    fslopeacc::S                       # Interpolation(progression)
    fairacc::AirAcceleration           # Callable with velocity
    fmotoracclim::MotorlimAcceleration # Callable with velocity
-   frollacc::RollRAcceleration         # Callable with no argument
+   frollacc::RollRAcceleration        # Callable with no argument
+   fgain::MotorGain                   # Callable with velocity deviation
    itp_v::T                           # Interpolation(progression)
 end
 

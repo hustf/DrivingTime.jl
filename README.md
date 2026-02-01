@@ -51,7 +51,7 @@ julia> plot_elevation_and_slope_vs_progression(d, "from", "to")
 
 julia> sol = solve_journey(j);
 
-julia> plot_journey(sol; "From -> To")
+julia> plot_journey(sol; tit = "From -> To")
 ```
 
 For birds-eye verification of the route travelled, take data from the dictionary out of 'continuous_route_data'. You can unpack `d[:multi_linestring]` by calling  `DrivingTime.RouteSlopeDistance.unique_unnested_coordinates_of_multiline_string`.

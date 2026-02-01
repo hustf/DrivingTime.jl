@@ -84,10 +84,15 @@ end
 
 function extract_acceleration_contributions(𝐣::Journey, p, p´)
     @assert length(p) == length(p´)
-    motoracc = map(𝐣.fmotoracclim, p´)
+    motoracclim = map(𝐣.fmotoracclim, p´)
     slopeacc = map(𝐣.fslopeacc, p)
     airacc = map(𝐣.fairacc, p´)
     rollacc = map(x -> 𝐣.frollacc(), p)
+    setpoint_vel = map(𝐣.itp_v, p)
+    Δv = setpoint_vel .- p´ 
+    motorgain = map(𝐣.fgain, Δv)
+    motoracc = motorgain .* motoracclim
+    #
     motoracc, slopeacc, airacc, rollacc 
 end
 

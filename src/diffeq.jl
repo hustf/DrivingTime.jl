@@ -132,19 +132,9 @@ function rhs!(du, u, 𝐣::Journey, t)
     p´´2 = 𝐣.fairacc(p´)
     p´´3 = 𝐣.frollacc()
     setpoint_vel = 𝐣.itp_v(p)
-    # Deviation of velocity
-    d = setpoint_vel .- p´
-    # Full gain amplitude
-    Δ = 3.0u"km/hr"
-    # 'gain' is -1 to 1
-    gain = max(min(d / Δ , 1), -1)
-    p´´4 = gain * 𝐣.fmotoracclim(p´)
+    p´´4 = 𝐣.fgain(setpoint_vel - p´) * 𝐣.fmotoracclim(p´)
     @debug "p´´"  p´´1   p´´2   p´´3  p´´4 maxlog = 2
-    if p´ < 80u"km/hr" # Temp of course
-        p´´ = p´´1  + p´´2 + p´´3  + p´´4
-    else
-        p´´ = p´´1  + p´´2 + p´´3
-    end
+    p´´ = p´´1  + p´´2 + p´´3  + p´´4
     @debug "du "    p´´     maxlog = 2
     packin!(du, p´, p´´)
     du

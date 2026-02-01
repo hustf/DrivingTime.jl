@@ -82,18 +82,24 @@ function reduce_speed_looking_ahead!(v, p, i; consider_dist = 500.0u"m", acc_con
         sqrt(v0² + 2 * a * Δp)
     end
     # Which point ahead is the one determining reduction in planned velocity here?
-    i_determine = argmax((i + 1):(i + Δi_after_potential_stop - 1)) do i_ahead
-        if v[i_ahead] < v[i]
-            v_ach = v_achieveable(i_ahead)
-            if v[i_ahead] < v_ach 
-                v_ach - v[i_ahead]
-            else
+    i_allahead = (i + 1):(i + Δi_after_potential_stop - 1)
+    if length(i_allahead) < 1
+        i_determine = i
+    else
+        i_determine = argmax(i_allahead) do i_ahead
+            if v[i_ahead] < v[i]
+                v_ach = v_achieveable(i_ahead)
+                if v[i_ahead] < v_ach 
+                    v_ach - v[i_ahead]
+                else
+                    0.0u"m/s"
+                end 
+            else 
                 0.0u"m/s"
-            end 
-        else 
-            0.0u"m/s"
+            end
         end
     end
+    # The speed difference we aim to achieve at i_determine
     Δv_positive = v_achieveable(i_determine) - v[i_determine]
     if Δv_positive > zero(Δv_positive)
         v[i] -= Δv_positive
@@ -144,6 +150,7 @@ end
 function Journey(d::Dict{Symbol, Any}; 
     f_air_acc = AirAcceleration(),
     f_motor_acclim = MotorlimAcceleration(),
+    f_motor_gain = MotorGain(),
     f_roll_acc = RollRAcceleration())
     # Gravity's component along the surface. Positive slope => negative component
     s = map(gravity_comp_along_surface, d[:slope])
@@ -163,7 +170,7 @@ function Journey(d::Dict{Symbol, Any};
     # Interpolator progression -> wanted speed
     itp_v = locally_smooth_interpolation(p, v)
     # Construct
-    Journey(pstop, itp_s, f_air_acc, f_motor_acclim, f_roll_acc, itp_v)
+    Journey(pstop, itp_s, f_air_acc, f_motor_acclim, f_roll_acc, f_motor_gain, itp_v)
 end
 
 # Utility

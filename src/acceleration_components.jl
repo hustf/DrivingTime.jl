@@ -80,6 +80,46 @@ end
 # Callable with velocity
 (a::MotorlimAcceleration)(v) = a.f(a.m + a.mr, a.P * a.η, a.F, a.rmp, v)
 
+
+
+
+
+
+
+"""
+    motor_gain(Δv₁, Δv)
+    ---> Float64
+
+Proportional controller, output is (-1, 1) based on velocity deviation / "error".
+"""
+motor_gain(Δv₁, Δv) = max(min(Δv / Δv₁ , 1.0), -1.0)
+
+
+"""
+    @kwdef struct MotorGain{T}
+        Δv::Tvel = VEHICLE_DEFAULTS.Δv
+        f::T = motor_gain
+    end
+
+Refer to `motor_gain`.
+"""
+@kwdef struct MotorGain{T}
+    Δv₁::Tvel = VEHICLE_DEFAULTS.Δv₁
+    f::T = motor_gain
+end
+# Callable with velocity
+(g::MotorGain)(Δv) = g.f(g.Δv₁, Δv)
+
+
+
+
+
+
+
+
+
+
+
 """
     roll_acceleration(Cr)
 
