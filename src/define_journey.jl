@@ -115,8 +115,9 @@ function reduce_speed_looking_ahead!(v, p; consider_dist = 500.0u"m", acc_consta
     v
 end
 
+
 """
-    Journey((ea1, no1, ea2, no2; 
+    Journey(waypoints; 
         default_fartsgrense = 50, 
         f_air_acc = AirAcceleration(),
         f_motor_acclim = MotorlimAcceleration(),
@@ -126,17 +127,24 @@ An external constructor for the ODE right-hand side parameters.
 
 # Arguments
 
-- `ea1, no1, ea2, no2` Utm33 easting and northing coordinates. Start at 1, end at 2.
+- `waypoints` Utm33 easting and northing coordinates, mininum two pairs. See `continuous_route_data`.
 - `default_fartsgrense` is used in case the starting point has no defined speed limit, e.g. in bus terminals.
 """
-function Journey(ea1, no1, ea2, no2; 
+function Journey(waypoints; 
     default_fartsgrense = 50, 
     f_air_acc = AirAcceleration(),
     f_motor_acclim = MotorlimAcceleration(),
     f_roll_acc = RollRAcceleration())
     #
     # Slope and progression (and fartsgrense)
-    d = route_leg_data(ea1, no1, ea2, no2; default_fartsgrense)
+    d = continuous_route_data(waypoints; default_fartsgrense)
+    Journey(d; f_air_acc, f_motor_acclim, f_roll_acc)
+end
+
+function Journey(d::Dict{Symbol, Any}; 
+    f_air_acc = AirAcceleration(),
+    f_motor_acclim = MotorlimAcceleration(),
+    f_roll_acc = RollRAcceleration())
     # Gravity's component along the surface. Positive slope => negative component
     s = map(gravity_comp_along_surface, d[:slope])
     # Progression

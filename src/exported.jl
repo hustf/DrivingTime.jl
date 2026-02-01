@@ -1,22 +1,17 @@
 """
-    drivetime(ea1, no1, ea2, no2)
-    --> Dates.Minute
+    drivetime(ea1, no1, ea2, no2; default_fartsgrense = 50)
+    drivetime(waypoints; default_fartsgrense = 50)
+    drivetime(j::Journey)
+    --> Dates.CompoundPeriod
 
-Starting point at Utm33 coordinates ("easting, northing") `ea1`, `no1`. Starting velocity: 0 km/hr.
+Simulated time to drive a heavy vehicle the specified route
 
-End point at Utm33 coordinates ("easting, northing") `ea1`, `no1`. Starting velocity: 1 km/hr.
+  - Starting velocity: 0 km/hr
+  - End velocity: 1 km/hr
 
-The route, road geometry and speed limits are taken from Norsk Vegdatabase's API if not already cached locally. 
-Driving time is found by integration of a simple model involving:
+See `continuous_route_data` regarding waypoints.
 
- - distance (of course)
- - speed limits (slow down in advance of reduced speed limit)
- - slope (affects acceleration and sometimes max speed)
- - curvature (limits speed through a centripetal acceleration limit)
- - speed bumps (limits velocity to 15 km/hr below the local speed limit)
- - unofficial vehicle data for an electric intercity bus, Yutong IC12E
- - temperature, air pressure and resistance
- - roll resistance
+The route, road geometry and speed limits are taken from Norsk Vegdatabase's API if not already cached locally. See `RouteSlopeDistance.jl`.
 
 Prior to starting the integration, the model parameters are collected in a `Journey` object. For detail control
 or for output resolution, see:
@@ -27,23 +22,79 @@ or for output resolution, see:
   - `slope`
   - `@u_str`
 
+Driving time is found by time integration of a simple model involving:
+
+ - distance (of course)
+ - speed limits (slow down in advance of reduced speed limit)
+ - slope (affects acceleration and sometimes max speed)
+ - curvature (limits speed through a centripetal acceleration limit)
+ - speed bumps (limits velocity to 15 km/hr below the local speed limit)
+ - unofficial vehicle data for an electric intercity bus, Yutong IC12E
+ - temperature, air pressure and resistance
+ - roll resistance
+
+
 # Example
 ```
 julia> using DrivingTime
 
 julia> drivetime(24062, 6939037, 28592, 6939504)
-8 minutes
+7 minutes, 48 seconds
 ```
 
 """
-function drivetime(ea1, no1, ea2, no2)
-    sol = solve_journey(Journey(ea1, no1, ea2, no2))
+drivetime(ea1, no1, ea2, no2; default_fartsgrense = 50) = drivetime([(ea1, no1), (ea2, no2)]; default_fartsgrense)
+drivetime(waypoints; default_fartsgrense = 50) = drivetime(Journey(waypoints; default_fartsgrense))
+function drivetime(j::Journey)
+    sol = solve_journey(j)
     t = sol.t[end]
     # Unitful.Time to Dates.Period
-    Minute(round(round(t / u"minute")))
+    nmi = Int(floor(t / u"minute"))
+    nse = Int(floor((t / u"minute" - nmi) * 60))
+    Dates.Minute(nmi) + Dates.Second(nse)
 end
 
 
+"""
+    continuous_route_data(points::Vector{NTuple{2, Int64}}; default_fartsgrense = 50)
+    continuous_route_data(fromtos::Vector{NTuple{4, Int64}}; default_fartsgrense = 50)
+    continuous_route_data(fromto::NTuple{4, Int64}; default_fartsgrense = 50)
+    ---> Dict{Symbol, Any}
+
+Calls to 'RouteSlopeDistance.route_leg_data' between A and C will cache the result, while this will cache legs individually.
+
+If several routes between `A` and `C` are of interest, caching one of those is not a good idea.
+
+`continuous_route_data` will cache `dAB` and `dBC`, but not the returned `dABC`. Multiple waypoints OK.
+"""
+function continuous_route_data(points::Vector{NTuple{2, Int64}}; default_fartsgrense = 50)
+    @assert length(points) > 1
+    fromtos = Vector{NTuple{4, Int64}}()
+    for i in eachindex(points)
+        i == 1 && continue
+        fromto = (points[i - 1]..., points[i]...)
+        push!(fromtos, fromto)
+    end
+    continuous_route_data(fromtos; default_fartsgrense)
+end
+function continuous_route_data(fromtos::Vector{NTuple{4, Int64}}; default_fartsgrense = 50)
+    @assert ! isempty(fromtos)
+    # Check continuity
+    for i in eachindex(fromtos)
+        i == 1 && continue
+        if fromtos[i - 1][3:4] !== fromtos[i][1:2]
+            throw(ArgumentError("Expected start position of $i to match end position of $(i - 1): $(fromtos[i-1:i])"))
+        end
+    end
+    # Join 
+    d = route_leg_data(fromtos[1]...; default_fartsgrense)
+    for i in 2:length(fromtos)
+        dleg = route_leg_data(fromtos[i]...; default_fartsgrense)
+        d = join_route_data(d, dleg) 
+    end
+    d
+end
+continuous_route_data(fromto::NTuple{4, Int64}; default_fartsgrense = 50) = continuous_route_data([fromto], default_fartsgrense)
 
 """
     plot_journey(sol::SciMLBase.ODESolution; xtime::Bool = false, 

@@ -4,7 +4,7 @@ using Interpolations: Extrapolation, ScaledInterpolation, BSplineInterpolation
 using Interpolations: BSpline, Cubic, Line, OnGrid
 using Interpolations: extrapolate, interpolate, Gridded, Linear, Throw, scale
 import RouteSlopeDistance
-using RouteSlopeDistance: route_leg_data
+using RouteSlopeDistance: route_leg_data, join_route_data
 import Unitful
 using Unitful: Length, Velocity, Acceleration, Time
 using Unitful: @u_str, Quantity, NoUnits, dimension
@@ -27,7 +27,7 @@ using Plots
 import Dates
 using Dates: Minute
 using PrecompileTools
-export drivetime, plot_journey, Journey, solve_journey, @u_str
+export drivetime, plot_journey, Journey, solve_journey, @u_str, continuous_route_data
 
 const g = 9.81u"m/s^2"
 
@@ -123,8 +123,11 @@ include("exported.jl")
         no2 = 6939504
         tit = na1 * " -> " * na2
         drivetime(ea1, no1, ea2, no2)
+        drivetime([(ea1, no1),
+                    (ea2, no2)])
         # A closer look
-        sol = solve_journey(Journey(ea1, no1, ea2, no2));
+        j = Journey([(ea1, no1), (ea2, no2)])
+        sol = solve_journey(j)
         pl = plot_journey(sol; tit)
         plot(pl[1], xlim =(5.5u"km", 6u"km"))
         nothing
